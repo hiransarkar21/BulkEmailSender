@@ -80,7 +80,7 @@ class LoginWindow(QWidget):
         self.login_button = QPushButton()
         self.login_button.setFont(self.paragraph_font)
         self.login_button.setText(" Login ")
-        self.login_button.setFixedSize(int(self.width() // 4), int(self.height() // 9))
+        self.login_button.setFixedSize(int(self.width() // 4), int(self.height() // 10))
         self.login_button.clicked.connect(self.open_bulk_email_sender_window)
         self.login_button.setStyleSheet("""QPushButton{border-radius: 25px; background-color: green; color: white;}""")
 
