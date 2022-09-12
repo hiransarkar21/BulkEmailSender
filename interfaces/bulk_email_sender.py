@@ -51,6 +51,7 @@ class SMTP(QThread):
                 print("Message sent to : ", recipient)
                 time.sleep(sleep_time)
 
+            server.quit()
             return
 
 
