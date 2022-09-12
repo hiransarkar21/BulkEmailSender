@@ -111,4 +111,8 @@ class LoginWindow(QWidget):
         self.setLayout(self.master_layout)
 
     def open_bulk_email_sender_window(self):
-        pass
+        from interfaces import bulk_email_sender
+
+        self.bulk_email_sender_window = bulk_email_sender.EmailSender()
+        self.bulk_email_sender_window.show()
+        self.close()
