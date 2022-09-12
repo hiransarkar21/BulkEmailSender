@@ -2,6 +2,56 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import smtplib
+import json
+import time
+import os
+
+BASE_DIR = os.getcwd()
+APPLICATION_DATA = os.path.join(BASE_DIR, "application_data")
+
+
+class SMTP(QThread):
+    def __init__(self, email_address, password, metadata_file_location):
+        super(SMTP, self).__init__()
+
+        # global attributes
+        self.email_address = email_address
+        self.password = password
+        self.metadata_file_location = metadata_file_location
+        self.is_thread_active = True
+
+    def run(self):
+        with open(self.metadata_file_location) as metadata_file:
+            metadata = json.load(metadata_file)
+
+        print("Preparing to send emails ...", end="\n")
+        sleep_time = metadata["sleep_time"]
+        smtp_host = metadata["smtp_host"]
+        smtp_port = metadata["smtp_port"]
+        recipients_addresses = metadata["recipients"]
+        email_subject = metadata["subject"]
+        email_body = metadata["body"]
+
+        while self.is_thread_active:
+            # looping through recipients addresses
+            for recipient in recipients_addresses:
+                header = 'To: ' + ", " + recipient + '\n' + 'From: ' + self.email_address + \
+                         '\n' + 'Subject: ' + email_subject + '\n' + \
+                         'List-Unsubscribe: ' + 'mailto: unsubrequests@mtbservices.org?subject=unsubscribe' + ''
+
+                final_message = header + '\n' + '\n' + email_body + '\n\n'
+
+                # Sending Process
+                server = smtplib.SMTP(smtp_host, smtp_port)
+                server.starttls()
+                server.login(self.email_address, self.password)
+                server.sendmail(recipient, recipient, final_message)
+
+                # testing console log
+                print("Message sent to : ", recipient)
+                time.sleep(sleep_time)
+
+            return
 
 
 # bulk email sender window
@@ -10,6 +60,8 @@ class EmailSender(QWidget):
         super(EmailSender, self).__init__()
 
         # global attributes
+        self.smtp_thread = None
+
         self.heading_font = QFont("Poppins", 18)
         self.heading_font.setBold(True)
         self.heading_font.setWordSpacing(2)
@@ -27,13 +79,41 @@ class EmailSender(QWidget):
         self.bulk_email_sender_screen_width = self.screen_size.width() // 2.5
         self.bulk_email_sender_screen_height = self.screen_size.height() // 1.2
 
+        self.email_metadata_file = None
+
         # instance methods
         self.window_configurations()
         self.user_interface()
+        self.file_configurations()
 
     def window_configurations(self):
         self.setFixedSize(int(self.bulk_email_sender_screen_width), int(self.bulk_email_sender_screen_height))
         self.setWindowTitle("Bulk Email Sender")
+
+    def file_configurations(self):
+        if os.path.isdir(APPLICATION_DATA):
+            pass
+        else:
+            os.mkdir(APPLICATION_DATA)
+
+        self.email_metadata_file = os.path.join(APPLICATION_DATA, "email_metadata.json")
+
+        # checking if metadata file exists
+        if os.path.isfile(self.email_metadata_file):
+            with open(self.email_metadata_file) as metadata_file:
+                metadata = json.load(metadata_file)
+
+            sleep_time = metadata["sleep_time"]
+            smtp_host = metadata["smtp_host"]
+            smtp_port = metadata["smtp_port"]
+
+            # filling up non-priority fields
+            self.get_smtp_port.setText(str(smtp_port))
+            self.get_smtp_host.setText(smtp_host)
+            self.get_sleep_period.setText(str(sleep_time))
+
+        else:
+            pass
 
     def user_interface(self):
         self.qlineedit_size = QSize(int(self.width() // 1.5), int(self.height() // 19))
@@ -50,6 +130,7 @@ class EmailSender(QWidget):
         self.child_email_recipients_layout = QHBoxLayout()
         self.child_email_body_layout = QHBoxLayout()
         self.child_email_sender_sleep_layout = QHBoxLayout()
+        self.child_host_and_port_layout = QHBoxLayout()
         self.footer_layout = QHBoxLayout()
 
         # widgets
@@ -136,7 +217,7 @@ class EmailSender(QWidget):
 
         self.sender_sleep_label = QLabel()
         self.sender_sleep_label.setFont(self.paragraph_font)
-        self.sender_sleep_label.setText("Sleep For : ")
+        self.sender_sleep_label.setText("Sleep For  : ")
 
         self.get_sleep_period = QLineEdit()
         self.get_sleep_period.setFont(self.paragraph_font)
@@ -144,11 +225,33 @@ class EmailSender(QWidget):
         self.get_sleep_period.setFixedSize(int(self.width() // 6), int(self.height() // 19))
         self.get_sleep_period.setStyleSheet("QLineEdit{border-radius: 20px; padding-left: 10px; padding-right: 20px;}")
 
+        self.host_label = QLabel()
+        self.host_label.setFont(self.paragraph_font)
+        self.host_label.setText("SMTP Host : ")
+
+        self.get_smtp_host = QLineEdit()
+        self.get_smtp_host.setFont(self.paragraph_font)
+        self.get_smtp_host.setPlaceholderText("host")
+        self.get_smtp_host.setFixedSize(int(self.width() // 3.5), int(self.height() // 19))
+        self.get_smtp_host.setStyleSheet("QLineEdit{border-radius: 20px; padding-left: 10px; padding-right: 20px;}")
+
+        self.port_label = QLabel()
+        self.port_label.setFont(self.paragraph_font)
+        self.port_label.setText("Port : ")
+
+        self.get_smtp_port = QLineEdit()
+        self.get_smtp_port.setFont(self.paragraph_font)
+        self.get_smtp_port.setPlaceholderText("port")
+        self.get_smtp_port.setFixedSize(int(self.width() // 6), int(self.height() // 19))
+        self.get_smtp_port.setStyleSheet("QLineEdit{border-radius: 20px; padding-left: 10px; padding-right: 20px;}")
+
         self.send_email_button = QPushButton()
         self.send_email_button.setFont(self.paragraph_font)
         self.send_email_button.setText("Send!")
+        self.send_email_button.clicked.connect(self.send_email_button_clicked)
         self.send_email_button.setFixedSize(int(self.width() // 5), int(self.height() // 17))
-        self.send_email_button.setStyleSheet("""QPushButton{border-radius: 25px; background-color: green; color: white;}""")
+        self.send_email_button.setStyleSheet(
+            """QPushButton{border-radius: 25px; background-color: green; color: white;}""")
 
         # adding widgets to their layouts
         self.header_layout.addWidget(self.welcome_label, alignment=Qt.AlignHCenter)
@@ -173,6 +276,13 @@ class EmailSender(QWidget):
         self.child_email_sender_sleep_layout.addWidget(self.get_sleep_period)
         self.child_email_sender_sleep_layout.addStretch()
 
+        self.child_host_and_port_layout.addWidget(self.host_label)
+        self.child_host_and_port_layout.addWidget(self.get_smtp_host)
+        self.child_host_and_port_layout.addSpacing(60)
+        self.child_host_and_port_layout.addWidget(self.port_label)
+        self.child_host_and_port_layout.addWidget(self.get_smtp_port)
+        self.child_host_and_port_layout.addStretch()
+
         # adding child body layouts to master body layout
         self.email_layout.addSpacing(3)
         self.email_layout.addLayout(self.child_email_address_layout)
@@ -185,6 +295,7 @@ class EmailSender(QWidget):
 
         self.email_options.addSpacing(3)
         self.email_options.addLayout(self.child_email_sender_sleep_layout)
+        self.email_options.addLayout(self.child_host_and_port_layout)
         self.email_options.addSpacing(3)
         self.email_options_groupbox.setLayout(self.email_options)
 
@@ -206,4 +317,32 @@ class EmailSender(QWidget):
 
         self.setLayout(self.master_layout)
 
+    def send_email_button_clicked(self):
+        email_address = self.get_email_address.text()
+        password = self.get_email_password.text()
+
+        # cleaning recipients addresses
+        # recipients_addresses = self.get_email_recipients_address.text().replace(" ", "").split(",")
+        # print("Addresses : ", recipients_addresses)
+
+        # for now as per client --- an array list of email
+        recipients_addresses = eval(self.get_email_recipients_address.text())
+        print("Addresses : ", recipients_addresses)
+
+        # writing information
+        with open(self.email_metadata_file, "w") as email_metadata_file:
+            metadata = {"sleep_time": int(self.get_sleep_period.text()),
+                        "smtp_host": self.get_smtp_host.text(),
+                        "smtp_port": int(self.get_smtp_port.text()),
+                        "recipients": recipients_addresses,
+                        "subject": self.get_email_subject.text(),
+                        "body": self.get_email_body.toPlainText()}
+
+            json.dump(metadata, email_metadata_file)
+
+        # starting thread
+        self.smtp_thread = SMTP(email_address=email_address, password=password,
+                                metadata_file_location=self.email_metadata_file)
+
+        self.smtp_thread.start()
 
