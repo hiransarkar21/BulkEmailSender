@@ -154,7 +154,7 @@ class EmailSender(QWidget):
 
         self.email_address_label = QLabel()
         self.email_address_label.setFont(self.paragraph_font)
-        self.email_address_label.setText("Email : ")
+        self.email_address_label.setText("SMTP Email : ")
 
         self.get_email_address = QLineEdit()
         self.get_email_address.setFont(self.paragraph_font)
@@ -169,7 +169,7 @@ class EmailSender(QWidget):
 
         self.get_email_password = QLineEdit()
         self.get_email_password.setFont(self.paragraph_font)
-        self.get_email_password.setPlaceholderText("password ...")
+        self.get_email_password.setPlaceholderText("smtp password ...")
         self.get_email_password.setEchoMode(QLineEdit.Password)
         self.get_email_password.setFixedSize(int(self.width() // 1.5), int(self.height() // 16))
         self.get_email_password.setStyleSheet("""QLineEdit{border-radius: 10px; padding-right: 15px; 
@@ -205,7 +205,7 @@ class EmailSender(QWidget):
         self.get_email_body.setFont(self.paragraph_font)
         self.get_email_body.setFixedSize(int(self.width() // 1.5), int(self.height() // 8))
         self.get_email_body.setPlaceholderText(" enter email body ...")
-        self.get_email_body.setStyleSheet("""QTextEdit{border-radius: 20px; border: 0px;}""")
+        self.get_email_body.setStyleSheet("""QTextEdit{border: 0px; border-radius: 20px;}""")
 
         self.email_options_groupbox = QGroupBox()
         self.email_options_groupbox.setFlat(True)
