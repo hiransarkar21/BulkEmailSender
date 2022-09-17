@@ -10,9 +10,9 @@ BASE_DIR = os.getcwd()
 APPLICATION_DATA = os.path.join(BASE_DIR, "application_data")
 
 
-class SMTP(QThread):
+class SMTPThread(QThread):
     def __init__(self, email_address, password, metadata_file_location):
-        super(SMTP, self).__init__()
+        super(SMTPThread, self).__init__()
 
         # global attributes
         self.email_address = email_address
@@ -28,7 +28,7 @@ class SMTP(QThread):
         sleep_time = metadata["sleep_time"]
         smtp_host = metadata["smtp_host"]
         smtp_port = metadata["smtp_port"]
-        recipients_addresses = metadata["recipients"]
+        recipients_addresses = metadata["recipients_excel_sheet"]
         email_subject = metadata["subject"]
         email_body = metadata["body"]
 
@@ -343,28 +343,19 @@ class EmailSender(QWidget):
         email_address = self.get_email_address.text()
         password = self.get_email_password.text()
 
-        # cleaning recipients addresses
-        # recipients_addresses = self.get_email_recipients_address.text().replace(" ", "").split(",")
-        # print("Addresses : ", recipients_addresses)
-
-        # for now as per client --- an array list of email
-        recipients_addresses = eval(self.get_email_recipients_address.text())
-        print("Addresses : ", recipients_addresses)
-
         # writing information
         with open(self.email_metadata_file, "w") as email_metadata_file:
             metadata = {"sleep_time": int(self.get_sleep_period.text()),
                         "smtp_host": self.get_smtp_host.text(),
                         "smtp_port": int(self.get_smtp_port.text()),
-                        "recipients": recipients_addresses,
+                        "recipients_excel_sheet": self.recipients_excel_sheet_file_name,
                         "subject": self.get_email_subject.text(),
                         "body": self.get_email_body.toPlainText()}
 
             json.dump(metadata, email_metadata_file)
 
         # starting thread
-        self.smtp_thread = SMTP(email_address=email_address, password=password,
-                                metadata_file_location=self.email_metadata_file)
+        self.smtp_thread = SMTPThread(email_address=email_address, password=password,
+                                      metadata_file_location=self.email_metadata_file)
 
         self.smtp_thread.start()
-
