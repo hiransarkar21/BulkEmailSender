@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from openpyxl import load_workbook
 import smtplib
 import json
 import time
@@ -28,9 +29,15 @@ class SMTPThread(QThread):
         sleep_time = metadata["sleep_time"]
         smtp_host = metadata["smtp_host"]
         smtp_port = metadata["smtp_port"]
-        recipients_addresses = metadata["recipients_excel_sheet"]
+        recipients_excel_sheet = metadata["recipients_excel_sheet"]
         email_subject = metadata["subject"]
         email_body = metadata["body"]
+
+        # fetching data from Excel sheet
+        self.master_workbook = load_workbook(filename=recipients_excel_sheet)
+        self.master_sheet = self.master_workbook.active
+        recipients_addresses = [excel_object.value for excel_object in self.master_sheet["A"] if
+                                excel_object.value != "Email Addresses"]
 
         while self.is_thread_active:
             # looping through recipients addresses
@@ -52,6 +59,7 @@ class SMTPThread(QThread):
                 time.sleep(sleep_time)
 
             server.quit()
+            print("Complete sending emails ...")
             return
 
 
