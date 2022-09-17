@@ -81,6 +81,7 @@ class EmailSender(QWidget):
         self.bulk_email_sender_screen_height = self.screen_size.height() // 1.2
 
         self.email_metadata_file = None
+        self.recipients_excel_sheet_file_name = None
 
         # instance methods
         self.window_configurations()
@@ -181,10 +182,19 @@ class EmailSender(QWidget):
 
         self.get_email_recipients_address = QLineEdit()
         self.get_email_recipients_address.setFont(self.paragraph_font)
-        self.get_email_recipients_address.setPlaceholderText("recipients ...")
-        self.get_email_recipients_address.setFixedSize(int(self.width() // 1.5), int(self.height() // 16))
+        self.get_email_recipients_address.setPlaceholderText("recipients excel sheet ...")
+        self.get_email_recipients_address.setReadOnly(True)
+        self.get_email_recipients_address.setFixedSize(int(self.width() // 2.02), int(self.height() // 16))
         self.get_email_recipients_address.setStyleSheet("""QLineEdit{border-radius: 10px; padding-right: 15px; 
                 padding-left: 15px;}""")
+
+        self.recipients_excel_sheet_browse_button = QPushButton()
+        self.recipients_excel_sheet_browse_button.setFont(self.paragraph_font)
+        self.recipients_excel_sheet_browse_button.setText("Browse")
+        self.recipients_excel_sheet_browse_button.clicked.connect(self.recipients_excel_sheet_browse_button_clicked)
+        self.recipients_excel_sheet_browse_button.setFixedSize(int(self.width() // 6), int(self.height() // 16))
+        self.recipients_excel_sheet_browse_button.setStyleSheet("""QPushButton{border-radius: 25px; 
+        background-color: #041a3d; color: white;}""")
 
         self.email_subject_label = QLabel()
         self.email_subject_label.setFont(self.paragraph_font)
@@ -266,6 +276,7 @@ class EmailSender(QWidget):
 
         self.child_email_recipients_layout.addWidget(self.email_recipients_label)
         self.child_email_recipients_layout.addWidget(self.get_email_recipients_address)
+        self.child_email_recipients_layout.addWidget(self.recipients_excel_sheet_browse_button)
 
         self.child_email_subject_layout.addWidget(self.email_subject_label)
         self.child_email_subject_layout.addWidget(self.get_email_subject)
@@ -317,6 +328,16 @@ class EmailSender(QWidget):
         self.master_layout.addLayout(self.footer_layout)
 
         self.setLayout(self.master_layout)
+
+    def recipients_excel_sheet_browse_button_clicked(self):
+        # opening open file dialog to get the location of the target Excel sheet
+        excel_sheet_filename = QFileDialog.getOpenFileName(self, "Open Recipients Excel Sheet", "",
+                                                           "Excel Sheet (*.xlsx)")
+
+        self.recipients_excel_sheet_file_name = excel_sheet_filename[0]
+
+        # setting location of target file to self.get_email_recipients_address
+        self.get_email_recipients_address.setText(self.recipients_excel_sheet_file_name)
 
     def send_email_button_clicked(self):
         email_address = self.get_email_address.text()
