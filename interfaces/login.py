@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+import mysql.connector
 
 
 # master login window
@@ -26,12 +27,16 @@ class LoginWindow(QWidget):
         self.login_screen_width = self.screen_size.width() // 2.7
         self.login_screen_height = self.screen_size.height() // 2
 
+        self.user_password = None
+        self.email_address = None
+
         # instance methods
         self.window_configurations()
         self.user_interface()
 
     def window_configurations(self):
         self.setFixedSize(int(self.login_screen_width), int(self.login_screen_height))
+        self.setWindowIcon(QIcon("assets//official_icon.ico"))
         self.setWindowTitle("Login into - Bulk Email Sender")
 
     def user_interface(self):
@@ -111,8 +116,26 @@ class LoginWindow(QWidget):
         self.setLayout(self.master_layout)
 
     def open_bulk_email_sender_window(self):
-        from interfaces import bulk_email_sender
+        self.email_address = self.get_email_address.text()
+        self.user_password = self.get_user_password.text()
+        self.validate_user_authenticity(email_address=self.email_address, password=self.user_password)
 
+        from interfaces import bulk_email_sender
         self.bulk_email_sender_window = bulk_email_sender.EmailSender()
         self.bulk_email_sender_window.show()
         self.close()
+
+    def validate_user_authenticity(self, email_address, password):
+        # connecting to local MySQL database
+        master_database = mysql.connector.connect(
+            host="127.0.0.1",
+            user="root",
+            password="",
+            database="mousekatool"
+        )
+
+        database_cursor = master_database.cursor()
+        database_query = ""
+        database_cursor.execute(database_query)
+        query_response = database_cursor.fetchone()
+
