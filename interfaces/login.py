@@ -24,8 +24,8 @@ class LoginWindow(QWidget):
         self.paragraph_font.setLetterSpacing(QFont.AbsoluteSpacing, 1)
 
         self.validation_status_font = QFont("Poppins", 12)
-        self.paragraph_font.setWordSpacing(3)
-        self.paragraph_font.setLetterSpacing(QFont.AbsoluteSpacing, 2)
+        self.validation_status_font.setWordSpacing(2)
+        self.validation_status_font.setLetterSpacing(QFont.AbsoluteSpacing, 1)
 
         self.screen_size = QApplication.primaryScreen().availableSize()
         self.login_screen_width = self.screen_size.width() // 2.7
