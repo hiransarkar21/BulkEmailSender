@@ -98,6 +98,7 @@ class EmailSender(QWidget):
 
     def window_configurations(self):
         self.setFixedSize(int(self.bulk_email_sender_screen_width), int(self.bulk_email_sender_screen_height))
+        self.setWindowIcon(QIcon("assets//official_icon.ico"))
         self.setWindowTitle("Bulk Email Sender")
 
     def file_configurations(self):
